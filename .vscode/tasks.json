@@ -1,0 +1,16 @@
+{
+   // See https://go.microsoft.com/fwlink/?LinkId=733558
+   // for the documentation about the tasks.json format
+   "version": "2.0.0",
+   "tasks": [
+      {
+         "label": "assembler",
+         "type": "shell",
+         "command": "masm main.asm main.obj main.lst",   // Ensamblar el archivo main.asm
+         "group": {
+            "kind": "build",
+            "isDefault": true
+         }
+      }
+   ]
+}

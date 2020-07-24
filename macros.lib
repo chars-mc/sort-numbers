@@ -1,0 +1,132 @@
+; Macro de funciones
+
+clearScreen MACRO    ; Cambia la modalidad de video para simular un clear screen
+   mov ah, 0fh ; Obtiene modalidad de video actual
+   int 10h
+   mov ah, 0   ; Cambia a la modalidad de video obtenida
+   int 10h
+ENDM
+
+showMessage MACRO message  ; Muestra en pantalla la cadena message
+   push ax                 ; Pone AX a la pila
+   push dx                 ; Pone DX a la pila
+   mov dx, OFFSET message  ; Carga la cadena de texto en dx
+   mov ah, 09h             ; Instrucción para imprimir en pantalla
+   int 21h                 ; Ejecutar instrucción
+   pop dx                  ; Saca DX de la pila
+   pop ax                  ; Saca AX de la pila
+ENDM
+
+cursorPos MACRO x, y       ; Posiciona el cursor según los valores x(columna), y(fila)
+   push ax
+   push bx
+   push dx
+   mov ah, 02h
+   mov dh, y
+   mov dl, x
+   mov bh, 0
+   int 10h
+   Pop dx
+   Pop bx
+   Pop ax
+ENDM
+
+eraseLine MACRO         ; Simula el borrado de una linea imprimiendo con una cadena con espacios
+   cursorPos 1, 20      ; Línea(x, y) donde se muestran los mensajes de error
+   showMessage borrar   ; Imprime la cadena de espacion
+ENDM
+
+
+showError MACRO         ; Imprime un mensaje de error
+   cursorPos 1, 20      ; Línea(x, y) donde se muestran los errores
+   showMessage error    ; Imprime la cadena que contiene el mensaje de error
+ENDM
+
+
+setNumber MACRO      ; Guarda los numeros ingresados por el usuario
+   mov ah, 01h       ; Capturar primer dígito
+   int 21h           ; Ejecuta la captura
+   sub al, 30h       ; Le resta 30
+   mov decena, al    ; Movemos decena a AL
+   mov ah, 01h       ; Capturar segundo dígito
+   int 21h           ; Ejecuta la captura
+   sub al, 30h       ; Le resta 30
+   mov unidad, al    ; Mueve el segundo número a AL
+
+   mov al, decena    ; Mueve decena a AL
+   mov bl, 10        ; Mueve 10 a BL
+   mul bl            ; Multiplica BL
+   add al, unidad    ; Suma unidad a AL
+   mov number, al    ; Mover al a number, guarda el resultado de los dos números ingresados en number
+ENDM
+
+printNumbers MACRO         ; Imprime mensaje 
+   cursorPos 1, 13         ; Posiciona el cursor donde se va imprimir el mensaje y los números
+   showMessage userNumbers ; Muestra el mensaje
+   mov cx, 20              ; Asigna 20 a CX para indicar que el ciclo se ejecutara 20 veces
+ENDM
+
+printN MACRO
+   mov al, numbers[di]     ; Mueve el valor de numbers[di] a AL
+   aam                     ; Corrige el resultado de la multiplicación de AB
+   mov bx, ax
+   mov ah, 02h
+   mov dl, bh
+   add dl, 30h             ; Suma 30
+   int 21h                 ; Imprime primer número
+   mov ah, 02h
+   mov dl, bl
+   add dl, 30h             ; Suma 30 a dl
+   int 21h                 ; Imprime segundo número
+   showMessage space       ; Imprime un espacio para separar los números
+ENDM
+
+printAscendente MACRO   ; Imprime el arreglo de números de menor a mayor
+   printNumbers         ; Imprime mensaje y posiciona el cursor para imprimir los números
+   mov di, 19           ; Indica desde qué posición se va imprimir el arreglo, en este caso desde el último valor, ya que el arreglo está ordenado de mayor a menor
+
+   ASCENDENTE:       ; Ciclo para imprimir todos los números de arreglo
+      printN         ; Imprime el número
+      dec di         ; DI decrementa en 1
+   loop ASCENDENTE
+ENDM
+
+printDescendente MACRO  ; Imprime el arreglo de números de mayor a menor
+   printNumbers         ; Imprime mensaje y posiciona el cursor para imprimir los números
+   mov di, 0            ; Indica desde qué posición se va imprimir el arreglo, en este caso el primer valor, ya que el arreglo está ordenado de mayor a menor
+
+   DESCENDENTE:      ; Ciclo para imprimir todos los números de arreglo
+      printN         ; Imprime el número
+      inc di         ; DI decrementa en 1
+   loop DESCENDENTE
+ENDM
+
+sortNumber MACRO     ; Ordena los números de mayor a menor
+   mov cx, 20        ; Cantidad de iteraciones
+   mov di, 0         ; Posición del arreglo  arreglo[di]
+
+   GETMIN:           ; Obtiene el valor mínimo
+      mov al, numbers[di]  ; Mueve el número numbers[di] a Al
+      inc di               ; Incrementa el DI
+      cmp numbers[di], al  ; Compara si AL con numbers[di]
+
+      ja ISBIGGER    ; Si Al es mayor, ejecuta ISBIGGER
+      jl CONTINUE    ; Si es menor continua con el ciclo
+      je CONTINUE    ; Si son iguales continua con el ciclo
+   
+   ISBIGGER:                  ; Intercambia los valores de number[di] con numbers[di-1]
+      mov bl, numbers[di]     ; bl guardará el valor menor
+      mov numbers[di], al     ; numbers[di] guardará el valor mayor(al)
+      mov numbers[di-1], bl   ; numbers[di-1] guardará el valor menor(bl)
+      mov di, 0               ; Reinicia DI, para accesar a la primera posición del arreglo
+      mov cx, 20              ; El ciclo vuelve a tener 20 iteraciones, hasta que el arregle este ordenado completamente
+
+   CONTINUE:         ; Continua con el ciclo
+
+   loop GETMIN
+ENDM
+
+exitProgram MACRO
+   mov ax, 4c00h  ; Termina el programa sin errores
+   int 21h        ; Ejecutar la instrucción
+ENDM
